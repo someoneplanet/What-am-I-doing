@@ -17,6 +17,7 @@ const captions = [
 
 // Meme counter
 let memeCount = 0;
+let isMusicPlaying = true;
 
 // Function to generate a random meme
 function generateRandomMeme() {
@@ -32,44 +33,49 @@ function generateRandomMeme() {
     const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
     document.querySelector('.meme-container').style.backgroundColor = randomColor;
 
-    // Trigger confetti
+    // Play click sound
+    document.getElementById('clickSound').play();
+
+    // Increment and update meme count
+    memeCount++;
+    document.getElementById('clickCount').textContent = `Memes Generated: ${memeCount}`;
+
+    // Fire confetti effect
     fireConfetti();
 }
 
-// Function to play meme click sound
-function playClickSound() {
-    const clickSound = document.getElementById('clickSound');
-    clickSound.currentTime = 0; // Reset sound
-    clickSound.play();
-}
-
-// Button click event to generate a random meme and play sound
-document.getElementById('generateMemeBtn').addEventListener('click', function() {
-    generateRandomMeme();
-    playClickSound();
-
-    // Update meme count
-    memeCount++;
-    document.getElementById('clickCount').textContent = `Memes Generated: ${memeCount}`;
-});
-
-// Function to play the background music
+// Function to play/pause background music
 function playBackgroundMusic() {
     const music = document.getElementById('backgroundMusic');
-    music.volume = 0.5; // Set volume (0.0 to 1.0)
-    music.play();
+    if (isMusicPlaying) {
+        music.play();
+        document.getElementById('musicToggle').textContent = 'Pause Music';
+    } else {
+        music.pause();
+        document.getElementById('musicToggle').textContent = 'Play Music';
+    }
+    isMusicPlaying = !isMusicPlaying; // Toggle the state
 }
 
-// Add floating memes to the background
+// Add event listener to the button
+document.getElementById('generateMemeBtn').addEventListener('click', generateRandomMeme);
+
+// Add event listener for music toggle
+document.getElementById('musicToggle').addEventListener('click', playBackgroundMusic);
+
+// Function to add floating memes to the background
 function addFloatingMemes() {
     const floatingContainer = document.querySelector('.floating-memes');
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 20; i++) { // More memes for better effect
         const memeElement = document.createElement('img');
         const randomIndex = Math.floor(Math.random() * memes.length);
+        const randomSize = (50 + Math.random() * 50) + 'px'; // Random size
         memeElement.src = memes[randomIndex].src;
         memeElement.classList.add('floating-meme');
         memeElement.style.left = Math.random() * 100 + 'vw';
+        memeElement.style.width = randomSize; // Set random size
+        memeElement.style.height = randomSize; // Set random size
         memeElement.style.animationDuration = (5 + Math.random() * 5) + 's'; // Random speed
         floatingContainer.appendChild(memeElement);
     }
