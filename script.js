@@ -38,7 +38,8 @@ function generateRandomMeme() {
 
 // Function to play meme click sound
 function playClickSound() {
-    const clickSound = new Audio('assets/sounds/meme-sound.mp3');
+    const clickSound = document.getElementById('clickSound');
+    clickSound.currentTime = 0; // Reset sound
     clickSound.play();
 }
 
@@ -59,12 +60,14 @@ function playBackgroundMusic() {
     music.play();
 }
 
-// Add floating memes in the background
+// Add floating memes to the background
 function addFloatingMemes() {
     const floatingContainer = document.querySelector('.floating-memes');
+
     for (let i = 0; i < 10; i++) {
         const memeElement = document.createElement('img');
-        memeElement.src = memes[Math.floor(Math.random() * memes.length)].src;
+        const randomIndex = Math.floor(Math.random() * memes.length);
+        memeElement.src = memes[randomIndex].src;
         memeElement.classList.add('floating-meme');
         memeElement.style.left = Math.random() * 100 + 'vw';
         memeElement.style.animationDuration = (5 + Math.random() * 5) + 's'; // Random speed
