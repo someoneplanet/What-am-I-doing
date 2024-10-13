@@ -1,7 +1,7 @@
 /* General Styles */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #202020;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #ff6b6b, #f7e75b);
     color: #fff;
     margin: 0;
     padding: 0;
@@ -11,14 +11,15 @@ body {
 }
 
 @keyframes backgroundAnimation {
-    0% { background-color: #202020; }
-    50% { background-color: #333333; }
-    100% { background-color: #202020; }
+    0% { background: linear-gradient(135deg, #ff6b6b, #f7e75b); }
+    50% { background: linear-gradient(135deg, #3a9fd1, #2ab673); }
+    100% { background: linear-gradient(135deg, #ff6b6b, #f7e75b); }
 }
 
 header {
-    background-color: #ff8800;
+    background-color: rgba(255, 140, 0, 0.9);
     padding: 20px;
+    backdrop-filter: blur(5px);
 }
 
 #logo {
@@ -44,7 +45,7 @@ button {
     cursor: pointer;
     border-radius: 10px;
     margin-top: 20px;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 button:active {
@@ -53,6 +54,7 @@ button:active {
 
 button:hover {
     background-color: #ff3300;
+    box-shadow: 0 0 20px #fff, 0 0 30px #ff5500; /* Glowing effect */
 }
 
 /* Shake animation */
@@ -67,7 +69,7 @@ main {
 }
 
 .meme-container {
-    background-color: #333;
+    background-color: rgba(51, 51, 51, 0.9);
     padding: 20px;
     border-radius: 15px;
     display: inline-block;
@@ -94,7 +96,7 @@ main {
 
 #memeTitle {
     margin: 15px 0;
-    font-size: 1.8em;
+    font-size: 2em;
     color: #ffcc00;
     text-shadow: 2px 2px #000;
     animation: bounceIn 0.6s ease-out forwards;
@@ -108,7 +110,7 @@ main {
 
 #memeCaption {
     font-style: italic;
-    font-size: 1.2em;
+    font-size: 1.5em;
     text-shadow: 1px 1px #000;
     opacity: 0;
     transform: translateY(20px);
@@ -133,9 +135,9 @@ main {
 
 .floating-meme {
     position: absolute;
-    width: 100px;
-    height: 100px;
-    opacity: 0.6;
+    width: 80px; /* Default width */
+    height: 80px; /* Default height */
+    opacity: 0.8;
     animation: floatMeme 10s infinite linear;
     filter: brightness(120%); /* Brighten the floating memes */
 }
@@ -146,7 +148,7 @@ main {
 }
 
 footer {
-    background-color: #ff8800;
+    background-color: rgba(255, 140, 0, 0.9);
     padding: 10px;
     margin-top: 40px;
 }
