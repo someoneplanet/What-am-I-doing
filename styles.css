@@ -7,6 +7,13 @@ body {
     padding: 0;
     text-align: center;
     overflow: hidden; /* Hide overflow for floating memes */
+    animation: backgroundAnimation 30s infinite linear; /* Background animation */
+}
+
+@keyframes backgroundAnimation {
+    0% { background-color: #202020; }
+    50% { background-color: #333333; }
+    100% { background-color: #202020; }
 }
 
 header {
@@ -53,7 +60,6 @@ button:hover {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
     50% { transform: translateX(5px); }
-    75% { transform: translateX(-5px); }
 }
 
 main {
@@ -69,6 +75,7 @@ main {
     max-width: 500px;
     margin-top: 20px;
     transition: background-color 0.5s ease;
+    filter: drop-shadow(0 0 10px #ffcc00); /* Add a glow effect */
 }
 
 #memeImage {
@@ -77,9 +84,10 @@ main {
     border-radius: 10px;
     transform: scale(0.8);
     animation: zoomIn 0.6s ease forwards;
+    filter: grayscale(20%); /* Add a grayscale effect */
 }
 
-@mkeyframes zoomIn {
+@keyframes zoomIn {
     0% { transform: scale(0.8); }
     100% { transform: scale(1); }
 }
@@ -92,7 +100,6 @@ main {
     animation: bounceIn 0.6s ease-out forwards;
 }
 
-/* Bounce in animation */
 @keyframes bounceIn {
     0% { transform: translateY(-200%); }
     60% { transform: translateY(10%); }
@@ -108,7 +115,6 @@ main {
     animation: fadeInUp 0.8s ease-out forwards;
 }
 
-/* Caption fade and slide in */
 @keyframes fadeInUp {
     0% { opacity: 0; transform: translateY(20px); }
     100% { opacity: 1; transform: translateY(0); }
@@ -131,6 +137,7 @@ main {
     height: 100px;
     opacity: 0.6;
     animation: floatMeme 10s infinite linear;
+    filter: brightness(120%); /* Brighten the floating memes */
 }
 
 @keyframes floatMeme {
