@@ -1,0 +1,85 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #202020;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+header {
+    background-color: #ff8800;
+    padding: 20px;
+}
+
+#logo {
+    width: 150px;
+    height: auto;
+}
+
+h1 {
+    font-size: 3em;
+    margin: 10px 0;
+}
+
+p {
+    font-size: 1.2em;
+}
+
+button {
+    background-color: #ff5500;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: #ff3300;
+}
+
+main {
+    margin: 20px;
+}
+
+.meme-container {
+    background-color: #333;
+    padding: 20px;
+    border-radius: 15px;
+    display: inline-block;
+    width: 80%;
+    max-width: 500px;
+    margin-top: 20px;
+}
+
+#memeImage {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+#memeTitle {
+    margin: 15px 0;
+    font-size: 1.8em;
+    color: #ffcc00;
+}
+
+#memeCaption {
+    font-style: italic;
+    font-size: 1.2em;
+}
+
+footer {
+    background-color: #ff8800;
+    padding: 10px;
+    margin-top: 40px;
+}
+
+footer p {
+    margin: 0;
+    font-size: 1em;
+}

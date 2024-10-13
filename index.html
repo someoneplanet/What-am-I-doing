@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Hub - The Dankest Memes</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <img src="assets/images/logo.jpg" alt="Meme Hub Logo" id="logo">
+        <h1>Meme Hub</h1>
+        <p>Click the button for maximum memeage!</p>
+        <button id="generateMemeBtn">Generate Meme</button>
+        <p id="clickCount">Memes Generated: 0</p>
+    </header>
+
+    <main>
+        <div class="meme-container">
+            <h2 id="memeTitle">Prepare for the meme...</h2>
+            <img id="memeImage" src="" alt="Random Meme">
+            <p id="memeCaption">Something meme-tastic is coming...</p>
+        </div>
+    </main>
+
+    <audio id="backgroundMusic" loop>
+        <source src="assets/sounds/background-music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <footer>
+        <p>&copy; 2024 Meme Hub. Stay Dank, Stay Memeing.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
