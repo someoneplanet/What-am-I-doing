@@ -23,26 +23,33 @@ setup_base() {
     pkg install -y proot proot-distro
 }
 
-# Function to setup Ubuntu with droidmaster user
+# Function to setup Ubuntu login
 setup_ubuntu() {
     echo "Installing Ubuntu in PRoot..."
     proot-distro install ubuntu
     
-    # Create droidmaster user and set up environment
+    # Setup droidmaster user
+    echo "Creating droidmaster user..."
     proot-distro login ubuntu -- useradd -m -s /bin/bash droidmaster
     proot-distro login ubuntu -- usermod -aG sudo droidmaster
-    proot-distro login ubuntu -- bash -c "echo 'droidmaster:droidmaster' | chpasswd"
+    proot-distro login ubuntu -- bash -c "echo 'droidmaster:7' | chpasswd"
     
     # Create convenient login command
     echo 'alias ubuntu="proot-distro login ubuntu --user droidmaster"' >> ~/.bashrc
     source ~/.bashrc
+    
+    # Fix sudo permissions for droidmaster
+    proot-distro login ubuntu -- bash -c 'echo "droidmaster ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers'
 }
 
 # Function to install Box86/Box64
 install_box() {
     echo "Installing Box86/Box64 dependencies..."
-    proot-distro login ubuntu -- apt update
-    proot-distro login ubuntu -- apt install -y git cmake build-essential gcc-multilib sudo
+    proot-distro login ubuntu --user droidmaster -- sudo apt update
+    proot-distro login ubuntu --user droidmaster -- sudo apt install -y git cmake build-essential python3
+    
+    # Additional dependencies for Box86/64
+    proot-distro login ubuntu --user droidmaster -- sudo apt install -y gcc g++ libc6-dev lib32gcc-s1 lib32stdc++6 zlib1g zlib1g-dev
     
     echo "Building and installing Box86..."
     proot-distro login ubuntu --user droidmaster -- bash -c '
@@ -70,20 +77,20 @@ install_box() {
 # Function to install Wine
 install_wine() {
     echo "Installing Wine dependencies..."
-    proot-distro login ubuntu -- dpkg --add-architecture i386
-    proot-distro login ubuntu -- apt update
-    proot-distro login ubuntu -- apt install -y wine wine32 wine64
+    proot-distro login ubuntu --user droidmaster -- sudo dpkg --add-architecture i386
+    proot-distro login ubuntu --user droidmaster -- sudo apt update
+    proot-distro login ubuntu --user droidmaster -- sudo apt install -y wine wine32 wine64
     
-    echo "Setting up Wine for droidmaster user..."
+    echo "Setting up Wine..."
     proot-distro login ubuntu --user droidmaster -- wine64 wineboot
 }
 
 # Function to install VNC and GNOME
 setup_desktop() {
     echo "Installing VNC and GNOME..."
-    proot-distro login ubuntu -- apt install -y tigervnc-standalone-server gnome-session gnome-terminal nautilus gnome-tweaks
+    proot-distro login ubuntu --user droidmaster -- sudo apt install -y tigervnc-standalone-server gnome-session gnome-terminal nautilus gnome-tweaks
     
-    # Create VNC directory for droidmaster
+    # Create VNC directory
     proot-distro login ubuntu --user droidmaster -- mkdir -p ~/.vnc
     
     # Create VNC startup script
@@ -121,9 +128,8 @@ main() {
     setup_desktop
     
     echo "Installation completed!"
-    echo "Default username: droidmaster"
-    echo "Default password: droidmaster"
-    echo "To enter Ubuntu environment as droidmaster, run: ubuntu"
+    echo "To enter Ubuntu environment, run: ubuntu"
+    echo "If prompted for password, use: 7"
     echo "Before starting VNC, set a password using: vncpasswd"
     echo "To start VNC server, run: ./start-vnc.sh"
 }
