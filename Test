@@ -23,10 +23,28 @@ setup_base() {
     pkg install -y proot proot-distro
 }
 
-# Function to setup Ubuntu login
+# Function to setup Ubuntu and create user
 setup_ubuntu() {
     echo "Installing Ubuntu in PRoot..."
     proot-distro install ubuntu
+    
+    echo "Setting up initial packages..."
+    proot-distro login ubuntu -- apt update
+    proot-distro login ubuntu -- apt install -y sudo
+
+    echo "Creating droidmaster user..."
+    # Create user and set password in a single command
+    proot-distro login ubuntu -- bash -c '
+        useradd -m -s /bin/bash -G sudo droidmaster
+        echo "droidmaster:7" | chpasswd
+        echo "droidmaster ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    '
+    
+    # Verify user was created
+    if ! proot-distro login ubuntu -- id droidmaster >/dev/null 2>&1; then
+        echo "Failed to create user droidmaster"
+        exit 1
+    fi
     
     # Create convenient login command
     echo 'alias ubuntu="proot-distro login ubuntu --user droidmaster"' >> ~/.bashrc
@@ -36,65 +54,66 @@ setup_ubuntu() {
 # Function to install Box86/Box64
 install_box() {
     echo "Installing Box86/Box64 dependencies..."
-    proot-distro login ubuntu --user droidmaster -- sudo apt update
-    proot-distro login ubuntu --user droidmaster -- sudo apt install -y git cmake build-essential python3
-    
-    # Additional dependencies for Box86/64
-    proot-distro login ubuntu --user droidmaster -- sudo apt install -y gcc g++ libc6-dev lib32gcc-s1 lib32stdc++6 zlib1g zlib1g-dev
+    proot-distro login ubuntu -- apt update
+    proot-distro login ubuntu -- apt install -y git cmake build-essential python3
+    proot-distro login ubuntu -- apt install -y gcc g++ libc6-dev lib32gcc-s1 lib32stdc++6 zlib1g zlib1g-dev
     
     echo "Building and installing Box86..."
-    proot-distro login ubuntu --user droidmaster -- bash -c '
-        cd ~/
+    proot-distro login ubuntu -- bash -c '
+        cd /home/droidmaster
         git clone https://github.com/ptitSeb/box86
         cd box86
         mkdir build && cd build
         cmake .. -DARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
         make -j$(nproc)
-        sudo make install
+        make install
+        chown -R droidmaster:droidmaster /home/droidmaster/box86
     '
     
     echo "Building and installing Box64..."
-    proot-distro login ubuntu --user droidmaster -- bash -c '
-        cd ~/
+    proot-distro login ubuntu -- bash -c '
+        cd /home/droidmaster
         git clone https://github.com/ptitSeb/box64
         cd box64
         mkdir build && cd build
         cmake .. -DARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
         make -j$(nproc)
-        sudo make install
+        make install
+        chown -R droidmaster:droidmaster /home/droidmaster/box64
     '
 }
 
 # Function to install Wine
 install_wine() {
     echo "Installing Wine dependencies..."
-    proot-distro login ubuntu --user droidmaster -- sudo dpkg --add-architecture i386
-    proot-distro login ubuntu --user droidmaster -- sudo apt update
-    proot-distro login ubuntu --user droidmaster -- sudo apt install -y wine wine32 wine64
+    proot-distro login ubuntu -- dpkg --add-architecture i386
+    proot-distro login ubuntu -- apt update
+    proot-distro login ubuntu -- apt install -y wine wine32 wine64
     
     echo "Setting up Wine..."
-    proot-distro login ubuntu --user droidmaster -- wine64 wineboot
+    proot-distro login ubuntu -- bash -c '
+        cd /home/droidmaster
+        su - droidmaster -c "wine64 wineboot"
+        chown -R droidmaster:droidmaster /home/droidmaster/.wine
+    '
 }
 
 # Function to install VNC and GNOME
 setup_desktop() {
     echo "Installing VNC and GNOME..."
-    proot-distro login ubuntu --user droidmaster -- sudo apt install -y tigervnc-standalone-server gnome-session gnome-terminal nautilus gnome-tweaks
+    proot-distro login ubuntu -- apt install -y tigervnc-standalone-server gnome-session gnome-terminal nautilus gnome-tweaks
     
-    # Create VNC directory
-    proot-distro login ubuntu --user droidmaster -- mkdir -p ~/.vnc
-    
-    # Create VNC startup script
-    cat > ~/.vnc-xstartup << 'EOF'
+    # Create VNC directory and configs
+    proot-distro login ubuntu -- bash -c '
+        mkdir -p /home/droidmaster/.vnc
+        cat > /home/droidmaster/.vnc/xstartup << EOF
 #!/bin/sh
 export XDG_SESSION_TYPE=x11
 export GDK_BACKEND=x11
 exec gnome-session
 EOF
-    
-    proot-distro login ubuntu --user droidmaster -- bash -c '
-        cp ~/.vnc-xstartup ~/.vnc/xstartup
-        chmod +x ~/.vnc/xstartup
+        chmod +x /home/droidmaster/.vnc/xstartup
+        chown -R droidmaster:droidmaster /home/droidmaster/.vnc
     '
     
     # Create VNC start script
