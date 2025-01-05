@@ -1,0 +1,132 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+# Error handling
+set -e
+trap 'echo "Error occurred at line $LINENO"' ERR
+
+# Function to check if running on ARM64
+check_architecture() {
+    if [ "$(uname -m)" != "aarch64" ]; then
+        echo "This script requires an ARM64 device"
+        exit 1
+    fi
+}
+
+# Function to update and install basic packages
+setup_base() {
+    echo "Updating package repositories..."
+    pkg update -y && pkg upgrade -y
+    
+    echo "Installing basic dependencies..."
+    pkg install -y x11-repo root-repo
+    pkg install -y tsu wget git cmake python make clang
+    pkg install -y proot proot-distro
+}
+
+# Function to setup Ubuntu with droidmaster user
+setup_ubuntu() {
+    echo "Installing Ubuntu in PRoot..."
+    proot-distro install ubuntu
+    
+    # Create droidmaster user and set up environment
+    proot-distro login ubuntu -- useradd -m -s /bin/bash droidmaster
+    proot-distro login ubuntu -- usermod -aG sudo droidmaster
+    proot-distro login ubuntu -- bash -c "echo 'droidmaster:droidmaster' | chpasswd"
+    
+    # Create convenient login command
+    echo 'alias ubuntu="proot-distro login ubuntu --user droidmaster"' >> ~/.bashrc
+    source ~/.bashrc
+}
+
+# Function to install Box86/Box64
+install_box() {
+    echo "Installing Box86/Box64 dependencies..."
+    proot-distro login ubuntu -- apt update
+    proot-distro login ubuntu -- apt install -y git cmake build-essential gcc-multilib sudo
+    
+    echo "Building and installing Box86..."
+    proot-distro login ubuntu --user droidmaster -- bash -c '
+        cd ~/
+        git clone https://github.com/ptitSeb/box86
+        cd box86
+        mkdir build && cd build
+        cmake .. -DARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        make -j$(nproc)
+        sudo make install
+    '
+    
+    echo "Building and installing Box64..."
+    proot-distro login ubuntu --user droidmaster -- bash -c '
+        cd ~/
+        git clone https://github.com/ptitSeb/box64
+        cd box64
+        mkdir build && cd build
+        cmake .. -DARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        make -j$(nproc)
+        sudo make install
+    '
+}
+
+# Function to install Wine
+install_wine() {
+    echo "Installing Wine dependencies..."
+    proot-distro login ubuntu -- dpkg --add-architecture i386
+    proot-distro login ubuntu -- apt update
+    proot-distro login ubuntu -- apt install -y wine wine32 wine64
+    
+    echo "Setting up Wine for droidmaster user..."
+    proot-distro login ubuntu --user droidmaster -- wine64 wineboot
+}
+
+# Function to install VNC and GNOME
+setup_desktop() {
+    echo "Installing VNC and GNOME..."
+    proot-distro login ubuntu -- apt install -y tigervnc-standalone-server gnome-session gnome-terminal nautilus gnome-tweaks
+    
+    # Create VNC directory for droidmaster
+    proot-distro login ubuntu --user droidmaster -- mkdir -p ~/.vnc
+    
+    # Create VNC startup script
+    cat > ~/.vnc-xstartup << 'EOF'
+#!/bin/sh
+export XDG_SESSION_TYPE=x11
+export GDK_BACKEND=x11
+exec gnome-session
+EOF
+    
+    proot-distro login ubuntu --user droidmaster -- bash -c '
+        cp ~/.vnc-xstartup ~/.vnc/xstartup
+        chmod +x ~/.vnc/xstartup
+    '
+    
+    # Create VNC start script
+    cat > ~/start-vnc.sh << 'EOF'
+#!/bin/bash
+proot-distro login ubuntu --user droidmaster -- vncserver -geometry 1280x720 -depth 24 :1
+EOF
+    
+    chmod +x ~/start-vnc.sh
+}
+
+# Main installation
+main() {
+    clear
+    echo "Starting installation of Box86/64 + Wine + VNC environment..."
+    
+    check_architecture
+    setup_base
+    setup_ubuntu
+    install_box
+    install_wine
+    setup_desktop
+    
+    echo "Installation completed!"
+    echo "Default username: droidmaster"
+    echo "Default password: droidmaster"
+    echo "To enter Ubuntu environment as droidmaster, run: ubuntu"
+    echo "Before starting VNC, set a password using: vncpasswd"
+    echo "To start VNC server, run: ./start-vnc.sh"
+}
+
+# Run main function
+main
