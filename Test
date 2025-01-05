@@ -28,9 +28,18 @@ setup_ubuntu() {
     echo "Installing Ubuntu in PRoot..."
     proot-distro install ubuntu
     
+    # Setup droidmaster user
+    echo "Creating droidmaster user..."
+    proot-distro login ubuntu -- useradd -m -s /bin/bash droidmaster
+    proot-distro login ubuntu -- usermod -aG sudo droidmaster
+    proot-distro login ubuntu -- bash -c "echo 'droidmaster:7' | chpasswd"
+    
     # Create convenient login command
     echo 'alias ubuntu="proot-distro login ubuntu --user droidmaster"' >> ~/.bashrc
     source ~/.bashrc
+    
+    # Fix sudo permissions for droidmaster
+    proot-distro login ubuntu -- bash -c 'echo "droidmaster ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers'
 }
 
 # Function to install Box86/Box64
