@@ -1,124 +1,53 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-echo "Manual Rootless Shizuku Setup Script for Android 14+"
-
-# Install required packages
-pkg update -y
-pkg install -y android-tools termux-api
-
-# Check if termux-api is installed
-if ! command -v termux-notification &> /dev/null; then
-    echo "Please install Termux:API app from F-Droid"
-    termux-open-url "https://f-droid.org/packages/com.termux.api/"
-    exit 1
-fi
-
-echo "Please follow these steps to find your IP address:"
-echo "1. Go to Settings > About phone > Status"
-echo "2. Find your IP address under 'IP address'"
-echo "   OR"
-echo "1. Go to Settings > Wi-Fi"
-echo "2. Tap your connected network"
-echo "3. Find your IP address in the network details"
+echo "Simple Shizuku ADB Wireless Setup"
+echo "--------------------------------"
+echo "1. Go to Settings > Developer options"
+echo "2. Enable 'Wireless debugging'"
+echo "3. Tap on 'Wireless debugging'"
+echo "4. Tap 'Pair device with pairing code'"
+echo "5. Enter the details shown on your screen below"
 echo ""
 
-read -p "Enter your IP address: " ip_address
-if [ -z "$ip_address" ]; then
-    echo "IP address cannot be empty"
-    exit 1
-fi
-
-# Generate random port in valid range
-port=$((RANDOM % 1000 + 5555))
-pairing_port=$((RANDOM % 1000 + 37000))
-pairing_code=$((RANDOM % 900000 + 100000))
-
-# Set up ADB wireless
-echo "Setting up ADB wireless..."
-setprop service.adb.tcp.port $port
+read -p "Enter Wireless debugging IP (e.g., 192.168.1.100): " pairing_ip
+read -p "Enter pairing port: " pairing_port
+read -p "Enter pairing code: " pairing_code
 
 # Start ADB server
 adb kill-server
 adb start-server
 
-# Show instructions in notification
-termux-notification \
-    --title "Shizuku Setup Instructions" \
-    --content "1. Go to Settings > Developer options
-2. Enable USB debugging
-3. Enable Wireless debugging
-4. Use these details in Wireless debugging:
-   IP: $ip_address
-   Port: $port
-   Pairing port: $pairing_port
-   Code: $pairing_code" \
-    --priority high \
-    --ongoing
+echo "Attempting to pair..."
+adb pair ${pairing_ip}:${pairing_port} ${pairing_code}
 
 echo ""
-echo "Now:"
-echo "1. Go to Settings > Developer options"
-echo "2. Enable USB debugging"
-echo "3. Enable Wireless debugging"
-echo "4. Use these connection details:"
-echo "   IP: $ip_address"
-echo "   Port: $port"
-echo "   Pairing port: $pairing_port"
-echo "   Pairing code: $pairing_code"
+echo "Now under 'Wireless debugging', look for 'IP address & Port'"
 echo ""
-read -p "Press Enter when you've enabled Wireless debugging..."
 
-# Attempt to pair and connect
-echo "Attempting to pair with device..."
-adb pair $ip_address:$pairing_port $pairing_code
-sleep 2
+read -p "Enter IP address (same as before): " connect_ip
+read -p "Enter port number: " connect_port
 
 echo "Attempting to connect..."
-adb connect $ip_address:$port
+adb connect ${connect_ip}:${connect_port}
 
-# Check if connection was successful
-if adb devices | grep -q "$ip_address:$port"; then
-    termux-notification \
-        --title "Shizuku Setup Success" \
-        --content "Successfully connected to ADB wireless" \
-        --priority high \
-        --button1 "Open Shizuku" \
-        --button1-action "am start -n moe.shizuku.privileged.api/.MainActivity"
-    
-    # Save connection details
-    mkdir -p ~/.shizuku
-    cat > ~/.shizuku/config <<EOF
-IP=$ip_address
-PORT=$port
-PAIRING_PORT=$pairing_port
-PAIRING_CODE=$pairing_code
-EOF
-    
-    # Create reconnection script
-    cat > ~/shizuku_reconnect.sh <<EOF
-#!/data/data/com.termux/files/usr/bin/bash
-adb connect $ip_address:$port
-EOF
-    chmod +x ~/shizuku_reconnect.sh
-    
-    echo "Created reconnection script at ~/shizuku_reconnect.sh"
-    
+if adb devices | grep -q "${connect_ip}:${connect_port}"; then
+    echo "Successfully connected!"
     echo ""
-    echo "To use split screen on Xiaomi:"
-    echo "1. Open Recents (swipe up and hold)"
-    echo "2. Long press the app"
+    echo "Now:"
+    echo "1. Open Shizuku app"
+    echo "2. Select 'Wireless debugging (No root)'"
+    echo ""
+    echo "To split screen on Xiaomi:"
+    echo "1. Open Recents"
+    echo "2. Long press app"
     echo "3. Tap 'Split screen'"
 else
-    termux-notification \
-        --title "Shizuku Setup Failed" \
-        --content "Could not establish ADB connection. Please check settings." \
-        --priority high
+    echo "Connection failed. Please check the entered details and try again."
 fi
 
+# Save reconnection command
+echo "#!/data/data/com.termux/files/usr/bin/bash" > ~/shizuku_reconnect.sh
+echo "adb connect ${connect_ip}:${connect_port}" >> ~/shizuku_reconnect.sh
+chmod +x ~/shizuku_reconnect.sh
 echo ""
-echo "To start Shizuku:"
-echo "1. Open Shizuku app"
-echo "2. Select 'Wireless debugging (No root)'"
-echo "3. Grant any requested permissions"
-echo ""
-echo "To reconnect later, run: ~/shizuku_reconnect.sh"
+echo "Created reconnection script at ~/shizuku_reconnect.sh"
