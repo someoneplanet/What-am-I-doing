@@ -1,53 +1,62 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-echo "Simple Shizuku ADB Wireless Setup"
-echo "--------------------------------"
-echo "1. Go to Settings > Developer options"
-echo "2. Enable 'Wireless debugging'"
-echo "3. Tap on 'Wireless debugging'"
-echo "4. Tap 'Pair device with pairing code'"
-echo "5. Enter the details shown on your screen below"
-echo ""
+# Exit if any command fails
+set -e
 
-read -p "Enter Wireless debugging IP (e.g., 192.168.1.100): " pairing_ip
-read -p "Enter pairing port: " pairing_port
-read -p "Enter pairing code: " pairing_code
+# Step 1: Update and upgrade Termux packages
+echo "Updating and upgrading Termux packages..."
+pkg update && pkg upgrade -y
 
-# Start ADB server
-adb kill-server
-adb start-server
+# Step 2: Install required packages
+echo "Installing dependencies..."
+pkg install -y git build-essential clang python python-dev libtool pkg-config \
+  libglvnd-dev libvulkan-dev mesa sdl2 sdl2-dev cmake x11-repo proot-distro \
+  termux-x11 xorg-x11-server-utils xterm x11-utils pulseaudio
 
-echo "Attempting to pair..."
-adb pair ${pairing_ip}:${pairing_port} ${pairing_code}
+# Step 3: Install and configure PulseAudio
+echo "Starting PulseAudio over TCP..."
+pulseaudio --start --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1" --exit-idle-time=-1
 
-echo ""
-echo "Now under 'Wireless debugging', look for 'IP address & Port'"
-echo ""
+# Step 4: Set up Termux X11 server
+echo "Setting up Termux X11 session..."
+export XDG_RUNTIME_DIR=${TMPDIR}
+termux-x11 :0 >/dev/null &
+sleep 3  # Wait for X11 server to start
+am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+sleep 1
 
-read -p "Enter IP address (same as before): " connect_ip
-read -p "Enter port number: " connect_port
+# Step 5: Install and set up Ubuntu in PRoot
+echo "Installing Ubuntu using proot-distro..."
+proot-distro install ubuntu
 
-echo "Attempting to connect..."
-adb connect ${connect_ip}:${connect_port}
+# Step 6: Set up and build xemu
+echo "Setting up xemu..."
 
-if adb devices | grep -q "${connect_ip}:${connect_port}"; then
-    echo "Successfully connected!"
-    echo ""
-    echo "Now:"
-    echo "1. Open Shizuku app"
-    echo "2. Select 'Wireless debugging (No root)'"
-    echo ""
-    echo "To split screen on Xiaomi:"
-    echo "1. Open Recents"
-    echo "2. Long press app"
-    echo "3. Tap 'Split screen'"
-else
-    echo "Connection failed. Please check the entered details and try again."
-fi
+# Clone the xemu repository
+cd $HOME
+git clone https://github.com/mborgerson/xemu.git
+cd xemu
 
-# Save reconnection command
-echo "#!/data/data/com.termux/files/usr/bin/bash" > ~/shizuku_reconnect.sh
-echo "adb connect ${connect_ip}:${connect_port}" >> ~/shizuku_reconnect.sh
-chmod +x ~/shizuku_reconnect.sh
-echo ""
-echo "Created reconnection script at ~/shizuku_reconnect.sh"
+# Create build directory and run cmake
+mkdir build
+cd build
+cmake ..
+
+# Compile xemu
+echo "Compiling xemu..."
+make -j$(nproc)
+
+# Step 7: Set up environment variables and run xemu in the proot environment
+echo "Setting up environment variables and launching xemu..."
+
+# Login to Ubuntu proot environment and start xemu
+proot-distro login ubuntu --shared-tmp -- /bin/bash -c  '
+  export PULSE_SERVER=127.0.0.1 &&
+  export XDG_RUNTIME_DIR=${TMPDIR} &&
+  sudo service dbus start &&
+  su - droidmaster -c "env DISPLAY=:0 ./xemu"'
+
+# Step 8: Completion message
+echo "xemu setup completed. You should now be able to run xemu with X11 forwarding."
+
+exit 0
