@@ -1,138 +1,140 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Error handling
-set -e
-trap 'echo "Error occurred at line $LINENO"' ERR
+echo "Advanced Rootless Shizuku Setup Script for Xiaomi Android 14+"
 
-# Function to check if running on ARM64
-check_architecture() {
-    if [ "$(uname -m)" != "aarch64" ]; then
-        echo "This script requires an ARM64 device"
-        exit 1
+# Install required packages
+pkg update -y
+pkg install -y android-tools termux-api
+
+# Check if termux-api is installed
+if ! command -v termux-notification &> /dev/null; then
+    echo "Please install Termux:API app from F-Droid"
+    termux-open-url "https://f-droid.org/packages/com.termux.api/"
+    exit 1
+fi
+
+# Function to check if it's a Xiaomi device
+check_xiaomi() {
+    if [[ $(getprop ro.miui.ui.version.name) ]]; then
+        return 0
+    else
+        return 1
     fi
 }
 
-# Function to update and install basic packages
-setup_base() {
-    echo "Updating package repositories..."
-    pkg update -y && pkg upgrade -y
-    
-    echo "Installing basic dependencies..."
-    pkg install -y x11-repo root-repo
-    pkg install -y tsu wget git cmake python make clang
-    pkg install -y proot proot-distro
-}
+# Xiaomi-specific split screen instructions
+if check_xiaomi; then
+    termux-notification \
+        --title "Split Screen Setup" \
+        --content "To enable split screen on Xiaomi:
+1. Open Recents
+2. Long press the app you want to split
+3. Tap 'Split screen'" \
+        --priority high
+fi
 
-# Function to setup Ubuntu login
-setup_ubuntu() {
-    echo "Installing Ubuntu in PRoot..."
-    proot-distro install ubuntu
-    
-    # Setup droidmaster user
-    echo "Creating droidmaster user..."
-    proot-distro login ubuntu -- useradd -m -s /bin/bash droidmaster
-    proot-distro login ubuntu -- usermod -aG sudo droidmaster
-    proot-distro login ubuntu -- bash -c "echo 'droidmaster:7' | chpasswd"
-    
-    # Create convenient login command
-    echo 'alias ubuntu="proot-distro login ubuntu --user droidmaster"' >> ~/.bashrc
-    source ~/.bashrc
-    
-    # Fix sudo permissions for droidmaster
-    proot-distro login ubuntu -- bash -c 'echo "droidmaster ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers'
-}
+# Enable required developer options
+echo "Enabling required developer options..."
+settings put global adb_enabled 1
+settings put global development_settings_enabled 1
 
-# Function to install Box86/Box64
-install_box() {
-    echo "Installing Box86/Box64 dependencies..."
-    proot-distro login ubuntu --user droidmaster -- sudo apt update
-    proot-distro login ubuntu --user droidmaster -- sudo apt install -y git cmake build-essential python3
-    
-    # Additional dependencies for Box86/64
-    proot-distro login ubuntu --user droidmaster -- sudo apt install -y gcc g++ libc6-dev lib32gcc-s1 lib32stdc++6 zlib1g zlib1g-dev
-    
-    echo "Building and installing Box86..."
-    proot-distro login ubuntu --user droidmaster -- bash -c '
-        cd ~/
-        git clone https://github.com/ptitSeb/box86
-        cd box86
-        mkdir build && cd build
-        cmake .. -DARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
-        make -j$(nproc)
-        sudo make install
-    '
-    
-    echo "Building and installing Box64..."
-    proot-distro login ubuntu --user droidmaster -- bash -c '
-        cd ~/
-        git clone https://github.com/ptitSeb/box64
-        cd box64
-        mkdir build && cd build
-        cmake .. -DARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo
-        make -j$(nproc)
-        sudo make install
-    '
-}
+# Enable wireless debugging
+settings put global adb_wifi_enabled 1
 
-# Function to install Wine
-install_wine() {
-    echo "Installing Wine dependencies..."
-    proot-distro login ubuntu --user droidmaster -- sudo dpkg --add-architecture i386
-    proot-distro login ubuntu --user droidmaster -- sudo apt update
-    proot-distro login ubuntu --user droidmaster -- sudo apt install -y wine wine32 wine64
-    
-    echo "Setting up Wine..."
-    proot-distro login ubuntu --user droidmaster -- wine64 wineboot
-}
+# Get device IP address
+ip_address=$(ip addr show wlan0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+if [ -z "$ip_address" ]; then
+    echo "Could not detect IP address. Make sure WiFi is connected."
+    exit 1
+fi
 
-# Function to install VNC and GNOME
-setup_desktop() {
-    echo "Installing VNC and GNOME..."
-    proot-distro login ubuntu --user droidmaster -- sudo apt install -y tigervnc-standalone-server gnome-session gnome-terminal nautilus gnome-tweaks
-    
-    # Create VNC directory
-    proot-distro login ubuntu --user droidmaster -- mkdir -p ~/.vnc
-    
-    # Create VNC startup script
-    cat > ~/.vnc-xstartup << 'EOF'
-#!/bin/sh
-export XDG_SESSION_TYPE=x11
-export GDK_BACKEND=x11
-exec gnome-session
+# Generate random port in valid range
+port=$((RANDOM % 1000 + 5555))
+pairing_port=$((RANDOM % 1000 + 37000))
+pairing_code=$((RANDOM % 900000 + 100000))
+
+# Set up ADB wireless
+echo "Setting up ADB wireless..."
+setprop service.adb.tcp.port $port
+
+# Start ADB server
+adb kill-server
+adb start-server
+
+# Configure pairing
+echo "Setting up device pairing..."
+am start -a android.settings.APPLICATION_DEVELOPMENT_SETTINGS
+sleep 2
+
+# Show connection information
+termux-notification \
+    --title "Shizuku Setup" \
+    --content "IP: $ip_address:$port
+Pairing Port: $pairing_port
+Pairing Code: $pairing_code" \
+    --priority high \
+    --ongoing
+
+# Attempt to pair and connect
+echo "Attempting to pair with device..."
+adb pair $ip_address:$pairing_port $pairing_code
+sleep 2
+
+echo "Attempting to connect..."
+adb connect $ip_address:$port
+
+# Check if connection was successful
+if adb devices | grep -q "$ip_address:$port"; then
+    termux-notification \
+        --title "Shizuku Setup Success" \
+        --content "Successfully connected to ADB wireless" \
+        --priority high \
+        --button1 "Open Shizuku" \
+        --button1-action "am start -n moe.shizuku.privileged.api/.MainActivity"
+        
+    # Save connection details
+    mkdir -p ~/.shizuku
+    cat > ~/.shizuku/config <<EOF
+IP=$ip_address
+PORT=$port
+PAIRING_PORT=$pairing_port
+PAIRING_CODE=$pairing_code
 EOF
     
-    proot-distro login ubuntu --user droidmaster -- bash -c '
-        cp ~/.vnc-xstartup ~/.vnc/xstartup
-        chmod +x ~/.vnc/xstartup
-    '
+    echo "Configuration saved to ~/.shizuku/config"
     
-    # Create VNC start script
-    cat > ~/start-vnc.sh << 'EOF'
-#!/bin/bash
-proot-distro login ubuntu --user droidmaster -- vncserver -geometry 1280x720 -depth 24 :1
+    # Create reconnection script
+    cat > ~/shizuku_reconnect.sh <<EOF
+#!/data/data/com.termux/files/usr/bin/bash
+adb connect $ip_address:$port
 EOF
+    chmod +x ~/shizuku_reconnect.sh
     
-    chmod +x ~/start-vnc.sh
-}
+    echo "Created reconnection script at ~/shizuku_reconnect.sh"
+else
+    termux-notification \
+        --title "Shizuku Setup Failed" \
+        --content "Could not establish ADB connection. Please check settings." \
+        --priority high
+fi
 
-# Main installation
-main() {
-    clear
-    echo "Starting installation of Box86/64 + Wine + VNC environment..."
-    
-    check_architecture
-    setup_base
-    setup_ubuntu
-    install_box
-    install_wine
-    setup_desktop
-    
-    echo "Installation completed!"
-    echo "To enter Ubuntu environment, run: ubuntu"
-    echo "If prompted for password, use: 7"
-    echo "Before starting VNC, set a password using: vncpasswd"
-    echo "To start VNC server, run: ./start-vnc.sh"
-}
-
-# Run main function
-main
+echo ""
+echo "Setup complete! Important information:"
+echo "IP Address: $ip_address"
+echo "Port: $port"
+echo "Pairing Port: $pairing_port"
+echo "Pairing Code: $pairing_code"
+echo ""
+echo "To start Shizuku:"
+echo "1. Open Shizuku app"
+echo "2. Select 'Wireless debugging (No root)'"
+echo "3. Grant any requested permissions"
+echo ""
+if check_xiaomi; then
+    echo "To use split screen on your Xiaomi device:"
+    echo "1. Open Recents (swipe up and hold)"
+    echo "2. Long press the app you want to split"
+    echo "3. Tap 'Split screen'"
+    echo ""
+fi
+echo "To reconnect later, run: ~/shizuku_reconnect.sh"
