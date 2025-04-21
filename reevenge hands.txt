@@ -26,35 +26,35 @@ local handle2 = gp(hat2, "Handle", "BasePart")
 local att2 = gp(handle2, "att1_Handle", "Attachment")
 att2.Parent = cplayer["Torso"]
 att2.Position = Vector3.new(-0, -0, 0)
-att2.Rotation = Vector3.new(180, 0, -15)
+att2.Rotation = Vector3.new(0, 3, 0)
  
 local hat2 = gp(cplayer, "Accessory (LArmNoob)", "Accessory")
 local handle2 = gp(hat2, "Handle", "BasePart")
 local att2 = gp(handle2, "att1_Handle", "Attachment")
 att2.Parent = cplayer["Left Arm"]
 att2.Position = Vector3.new(0.3, -0.2, -0.4)
-att2.Rotation = Vector3.new(-100, 0, 0)
+att2.Rotation = Vector3.new(0, 3, 0)
 
 local hat2 = gp(cplayer, "Accessory (RArmNoob)", "Accessory")
 local handle2 = gp(hat2, "Handle", "BasePart")
 local att2 = gp(handle2, "att1_Handle", "Attachment")
 att2.Parent = cplayer["Right Arm"]
 att2.Position = Vector3.new(-0.3, -0.2, -0.4)
-att2.Rotation = Vector3.new(-100, 0, 0) --LavanderHair
+att2.Rotation = Vector3.new(0, 3, 0) --LavanderHair
 
 local hat2 = gp(cplayer, "Accessory (RLegNoob)", "Accessory")
 local handle2 = gp(hat2, "Handle", "BasePart")
 local att2 = gp(handle2, "att1_Handle", "Attachment")
 att2.Parent = cplayer["Right Leg"]
 att2.Position = Vector3.new(0, -0, 0.5) --Robloxclassicred
-att2.Rotation = Vector3.new(0, -5, -45)
+att2.Rotation = Vector3.new(0, 3, 0)
 
 local hat2 = gp(cplayer, "Accessory (LLegNoob)", "Accessory")
 local handle2 = gp(hat2, "Handle", "BasePart")
 local att2 = gp(handle2, "att1_Handle", "Attachment")
 att2.Parent = cplayer["Left Leg"]
 att2.Position = Vector3.new(-0, -0, 0.5) 
-att2.Rotation = Vector3.new(0, 0, -45)
+att2.Rotation = Vector3.new(0, 3, 0)
 
 local script = game:GetObjects("rbxassetid://10170990440")[1]
 	local AHB = Instance.new("BindableEvent")
