@@ -1,7 +1,7 @@
 player = game.Players.LocalPlayer
 cplayer = player.Character
 
-loadstring(game:HttpGet(('https://pastebin.com/raw/LcS8FvtC'),true))()
+loadstring(game:HttpGet(('https://pastefy.app/Mb3YfYL8/raw'),true))()
 
 for i,v in pairs (cplayer:GetChildren()) do
 	if v:IsA("Accessory") then
