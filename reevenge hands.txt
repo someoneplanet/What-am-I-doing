@@ -1,3 +1,92 @@
+player = game.Players.LocalPlayer
+cplayer = player.Character
+
+loadstring(game:HttpGet(('https://pastebin.com/raw/LcS8FvtC'),true))()
+
+for i,v in pairs (cplayer:GetChildren()) do
+	if v:IsA("Accessory") then
+		v.Handle.Massless = true
+		v.Handle.CustomPhysicalProperties = PhysicalProperties.new(0,0,0,0,0)
+	end
+end
+
+local function gp(parent, name, className)
+    if typeof(parent) == "Instance" then
+        for i, v in pairs(parent:GetChildren()) do
+            if (v.Name == name) and v:IsA(className) then
+                return v
+            end
+        end
+    end
+    return nil
+end
+
+local hat2 = gp(cplayer, "MeshPartAccessory", "Accessory")
+local handle2 = gp(hat2, "Handle", "BasePart")
+local att2 = gp(handle2, "att1_Handle", "Attachment")
+att2.Parent = cplayer["Torso"]
+att2.Position = Vector3.new(-0, -0, 0)
+att2.Rotation = Vector3.new(180, 0, -15)
+ 
+local hat2 = gp(cplayer, "Yoga Mat1", "Accessory")
+local handle2 = gp(hat2, "Handle", "BasePart")
+local att2 = gp(handle2, "att1_Handle", "Attachment")
+att2.Parent = cplayer["Left Arm"]
+att2.Position = Vector3.new(0.3, -0.2, -0.4)
+att2.Rotation = Vector3.new(-100, 0, 0)
+
+local hat2 = gp(cplayer, "Yoga Mat", "Accessory")
+local handle2 = gp(hat2, "Handle", "BasePart")
+local att2 = gp(handle2, "att1_Handle", "Attachment")
+att2.Parent = cplayer["Right Arm"]
+att2.Position = Vector3.new(-0.3, -0.2, -0.4)
+att2.Rotation = Vector3.new(-100, 0, 0) --LavanderHair
+
+local hat2 = gp(cplayer, "Lipstick_Bag_3.0", "Accessory")
+local handle2 = gp(hat2, "Handle", "BasePart")
+local att2 = gp(handle2, "att1_Handle", "Attachment")
+att2.Parent = cplayer["Right Leg"]
+att2.Position = Vector3.new(0, -0, 0.5) --Robloxclassicred
+att2.Rotation = Vector3.new(0, -5, -45)
+
+local hat2 = gp(cplayer, "Lipstick_Bag_1.0", "Accessory")
+local handle2 = gp(hat2, "Handle", "BasePart")
+local att2 = gp(handle2, "att1_Handle", "Attachment")
+att2.Parent = cplayer["Left Leg"]
+att2.Position = Vector3.new(-0, -0, 0.5) 
+att2.Rotation = Vector3.new(0, 0, -45)
+
+local script = game:GetObjects("rbxassetid://10170990440")[1]
+	local AHB = Instance.new("BindableEvent")
+	
+	local FPS = 30
+	
+	local TimeFrame = 0
+	
+	local LastFrame = tick()
+	local Frame = 1/FPS
+	
+	game:service'RunService'.Heartbeat:connect(function(s,p)
+		TimeFrame = TimeFrame + s
+		if(TimeFrame >= Frame)then
+			for i = 1,math.floor(TimeFrame/Frame) do
+				AHB:Fire()
+			end
+			LastFrame=tick()
+			TimeFrame=TimeFrame-Frame*math.floor(TimeFrame/Frame)
+		end
+	end)
+
+
+	function swait(dur)
+		if(dur == 0 or typeof(dur) ~= 'number')then
+			AHB.Event:wait()
+		else
+			for i = 1, dur*FPS do
+				AHB.Event:wait()
+			end
+		end
+	end
 --[[ Leaked by CLarramore ]]--
 -- Ever since 3/10/2016 this script started to get popular in oxcool1's SB
 -- I am now spreading this on
