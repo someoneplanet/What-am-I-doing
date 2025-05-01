@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------
 -- Thanx for using mah admin script I'd appreciate credit if you used in your place c: --
 -----------------------------------------------------------------------------------------
-local owners = {"Knobble"} -- Are able to set admins who can ban/etc... using :pa name
+local owners = {"9plus10is21idk"} -- Are able to set admins who can ban/etc... using :pa name
 local admins = {"Kohltastrophe"} -- Sets admins who can use ban/kick/admin or shutdown
 local tempadmins = {} -- Sets admins who can't use ban/kick/admin or shutdown
 local banland = {"MasterKhaos"} -- Permanently Bans people
