@@ -1,4 +1,4 @@
-([[This file was protected with MoonSec V3]]):gsub(
+[[This file was protected with MoonSec V3]]:gsub(
     ".+",
     (function(a)
         _izjqezDZjstC = a
@@ -6739,3 +6739,4 @@ end)(
     end),
     ...
 )
+
