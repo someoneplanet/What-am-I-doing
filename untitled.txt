@@ -1,4 +1,18 @@
-[[This file was protected with MoonSec V3]]:gsub(
+local om = string.match          
+string.match = function(a,b)     
+    if b == "%d+" then
+        return "1"
+    elseif b == ":%d+: a" then
+        return ":1: a"
+    end
+    return om(a,b)              
+end
+
+local ap = function(...)
+    print(...)
+end
+
+([[This file was protected with MoonSec V3]]):gsub(
     ".+",
     (function(a)
         _izjqezDZjstC = a
@@ -6739,4 +6753,5 @@ end)(
     end),
     ...
 )
+
 
